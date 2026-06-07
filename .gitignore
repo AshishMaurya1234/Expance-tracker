@@ -4,6 +4,7 @@
 *.pyc
 *.swp
 .DS_Store
+Thumbs.db
 .atom/
 .build/
 .buildlog/
@@ -32,6 +33,7 @@ migrate_working_dir/
 .pub/
 /build/
 /coverage/
+local.properties
 
 # Symbolication related
 app.*.symbols
@@ -43,3 +45,16 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Firebase
+firebase-debug.log
+
+# Android
+android/app/google-services.json
+android/key.properties
+
+# iOS
+ios/Runner/GoogleService-Info.plist
+
+# Node
+node_modules/
