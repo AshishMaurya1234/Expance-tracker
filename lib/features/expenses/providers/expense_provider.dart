@@ -17,6 +17,26 @@ class ExpenseProvider extends ChangeNotifier {
   String? get error => _error;
   int get transactionCount => _expenses.length;
 
+  // Map category names to database IDs
+  int _resolveCategoryId(String categoryName) {
+    switch (categoryName.toLowerCase().trim()) {
+      case 'food':
+        return 1;
+      case 'travel':
+        return 2;
+      case 'bills':
+        return 3;
+      case 'shopping':
+        return 4;
+      case 'health':
+        return 5;
+      case 'entertainment':
+        return 6;
+      default:
+        return 1;
+    }
+  }
+
   // Fetch all expenses from backend / MySQL
   Future<void> fetchExpenses() async {
     _isLoading = true;
@@ -46,28 +66,31 @@ class ExpenseProvider extends ChangeNotifier {
     }
   }
 
-  // Matches add_expense_screen.dart call: addExpense(expense)
+  // Add Expense with correct category ID
   Future<void> addExpense(ExpenseModel expense) async {
     try {
-      // Optimistic local update
       _expenses.add(expense);
       notifyListeners();
 
-      // Persist to MySQL via Node.js
+      final categoryId = _resolveCategoryId(expense.category);
+
       await ApiService.post('/expenses', {
         'amount': expense.amount,
         'expense_date': expense.date.toIso8601String().substring(0, 10),
         'payment_mode': expense.paymentMode,
         'notes': expense.notes,
-        'category_id': 1, // default or matched category
+        'category_id': categoryId,
       });
+
+      // Reload fresh data from database
+      await fetchExpenses();
     } catch (e) {
       _error = e.toString();
       notifyListeners();
     }
   }
 
-  // Matches add_expense_screen.dart call: updateExpense(expense)
+  // Update Expense with correct category ID
   Future<void> updateExpense(ExpenseModel updatedExpense) async {
     final index = _expenses.indexWhere((e) => e.id == updatedExpense.id);
     if (index != -1) {
@@ -75,13 +98,17 @@ class ExpenseProvider extends ChangeNotifier {
       notifyListeners();
 
       try {
+        final categoryId = _resolveCategoryId(updatedExpense.category);
+
         await ApiService.put('/expenses/${updatedExpense.id}', {
           'amount': updatedExpense.amount,
           'expense_date': updatedExpense.date.toIso8601String().substring(0, 10),
           'payment_mode': updatedExpense.paymentMode,
           'notes': updatedExpense.notes,
-          'category_id': 1,
+          'category_id': categoryId,
         });
+
+        await fetchExpenses();
       } catch (e) {
         _error = e.toString();
         notifyListeners();
@@ -89,7 +116,7 @@ class ExpenseProvider extends ChangeNotifier {
     }
   }
 
-  // Matches delete call: deleteExpense(id)
+  // Delete Expense
   Future<void> deleteExpense(String id) async {
     _expenses.removeWhere((e) => e.id == id);
     notifyListeners();
