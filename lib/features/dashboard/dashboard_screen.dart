@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../expenses/add_expense_screen.dart';
-// import '../expenses/models/expense_model.dart';
 import '../expenses/providers/expense_provider.dart';
+import '../categories/providers/category_provider.dart';
 import '../profile/profile_screen.dart';
 import '../expenses/widgets/expense_tile.dart';
 import '../expenses/screens/expense_list_screen.dart';
@@ -20,6 +20,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool isSidebarExpanded = true;
 
   static const double desktopBreakpoint = 700;
+
+  @override
+  void initState() {
+    super.initState();
+    // Auto-fetch latest expenses and categories from MySQL on screen load
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<ExpenseProvider>(context, listen: false).fetchExpenses();
+      Provider.of<CategoryProvider>(context, listen: false).fetchCategories();
+    });
+  }
 
   final List<Widget> pages = const [
     HomePage(),
@@ -296,40 +306,45 @@ class HomePage extends StatelessWidget {
     final expenseProvider = context.watch<ExpenseProvider>();
     final expenses = expenseProvider.expenses;
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        SummaryGrid(expenseProvider: expenseProvider),
-        const SizedBox(height: 24),
+    return RefreshIndicator(
+      onRefresh: () async {
+        await expenseProvider.fetchExpenses();
+      },
+      child: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          SummaryGrid(expenseProvider: expenseProvider),
+          const SizedBox(height: 24),
 
-        if (expenses.isEmpty)
-          const Center(
-            child: Padding(
-              padding: EdgeInsets.only(top: 40),
-              child: Text(
-                "No expenses yet.\nTap + to add your first expense.",
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16),
+          if (expenses.isEmpty)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.only(top: 40),
+                child: Text(
+                  "No expenses yet.\nTap + to add your first expense.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 16),
+                ),
+              ),
+            )
+          else ...[
+            const Text(
+              "Recent Transactions",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
               ),
             ),
-          )
-        else ...[
-          const Text(
-            "Recent Transactions",
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+            const SizedBox(height: 12),
+            ...expenses.map(
+                  (expense) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: ExpenseTile(expense: expense),
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          ...expenses.map(
-                (expense) => Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: ExpenseTile(expense: expense),
-            ),
-          ),
+          ],
         ],
-      ],
+      ),
     );
   }
 }

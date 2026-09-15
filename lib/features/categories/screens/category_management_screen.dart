@@ -120,7 +120,7 @@ class CategoryManagementScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
-                    value: selectedIcon,
+                    initialValue: selectedIcon,
                     decoration: const InputDecoration(
                       labelText: "Icon",
                     ),

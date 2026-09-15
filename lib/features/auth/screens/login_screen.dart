@@ -101,9 +101,9 @@ class _LoginScreenState extends State<LoginScreen>
       CurvedAnimation(
         parent: _animationController,
         curve: Interval(
-          0.08 * index,
-          0.60 + (0.08 * index),
-          curve: Curves.easeOutCubic,
+          (0.08 * index).clamp(0.0, 1.0),
+          (0.60 + (0.08 * index)).clamp(0.0, 1.0),
+        curve: Curves.easeOutCubic,
         ),
       ),
     );
@@ -113,9 +113,9 @@ class _LoginScreenState extends State<LoginScreen>
     return CurvedAnimation(
       parent: _animationController,
       curve: Interval(
-        0.08 * index,
-        0.65 + (0.08 * index),
-        curve: Curves.easeOut,
+        (0.08 * index).clamp(0.0, 1.0),
+        (0.65 + (0.08 * index)).clamp(0.0, 1.0),
+      curve: Curves.easeOut,
       ),
     );
   }

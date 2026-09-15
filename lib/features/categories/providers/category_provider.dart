@@ -1,106 +1,96 @@
 import 'package:flutter/material.dart';
-
+import '../../../core/services/api_service.dart';
 import '../models/category_model.dart';
 
 class CategoryProvider extends ChangeNotifier {
-  final List<CategoryModel> _categories = [
+  List<CategoryModel> _categories = [
     CategoryModel(
-      id: "food",
+      id: "1",
       name: "Food",
-      icon: "food",
+      icon: "fastfood",
       color: 0xFFFF9800,
       isDefault: true,
       createdAt: DateTime.now(),
     ),
     CategoryModel(
-      id: "travel",
+      id: "2",
       name: "Travel",
-      icon: "travel",
+      icon: "directions_car",
       color: 0xFF2196F3,
       isDefault: true,
       createdAt: DateTime.now(),
     ),
     CategoryModel(
-      id: "bills",
+      id: "3",
       name: "Bills",
-      icon: "bills",
-      color: 0xFFF44336,
-      isDefault: true,
-      createdAt: DateTime.now(),
-    ),
-    CategoryModel(
-      id: "shopping",
-      name: "Shopping",
-      icon: "shopping",
-      color: 0xFF9C27B0,
-      isDefault: true,
-      createdAt: DateTime.now(),
-    ),
-    CategoryModel(
-      id: "health",
-      name: "Health",
-      icon: "health",
-      color: 0xFF4CAF50,
-      isDefault: true,
-      createdAt: DateTime.now(),
-    ),
-    CategoryModel(
-      id: "education",
-      name: "Education",
-      icon: "education",
-      color: 0xFF00BCD4,
-      isDefault: true,
-      createdAt: DateTime.now(),
-    ),
-    CategoryModel(
-      id: "entertainment",
-      name: "Entertainment",
-      icon: "entertainment",
+      icon: "receipt",
       color: 0xFFE91E63,
       isDefault: true,
       createdAt: DateTime.now(),
     ),
     CategoryModel(
-      id: "other",
-      name: "Other",
-      icon: "other",
-      color: 0xFF607D8B,
+      id: "4",
+      name: "Shopping",
+      icon: "shopping_cart",
+      color: 0xFF9C27B0,
       isDefault: true,
       createdAt: DateTime.now(),
     ),
   ];
 
-  List<CategoryModel> get categories =>
-      List.unmodifiable(_categories);
+  bool _isLoading = false;
+
+  List<CategoryModel> get categories => _categories;
+  bool get isLoading => _isLoading;
+
+  Future<void> fetchCategories() async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final data = await ApiService.get('/categories');
+      if (data is List && data.isNotEmpty) {
+        _categories = data.map<CategoryModel>((json) {
+          return CategoryModel(
+            id: json['category_id'].toString(),
+            name: json['category_name'] ?? '',
+            icon: json['icon'] ?? 'category',
+            color: 0xFF00C897,
+            isDefault: json['user_id'] == null,
+            createdAt: json['created_at'] != null
+                ? DateTime.parse(json['created_at'])
+                : DateTime.now(),
+          );
+        }).toList();
+      }
+    } catch (e) {
+      debugPrint('Failed to load categories: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 
   void addCategory(CategoryModel category) {
     _categories.add(category);
     notifyListeners();
+
+    ApiService.post('/categories', {
+      'category_name': category.name,
+      'icon': category.icon,
+    }).catchError((e) => debugPrint('Error adding category: $e'));
   }
 
   void updateCategory(CategoryModel category) {
-    final index = _categories.indexWhere(
-          (c) => c.id == category.id,
-    );
-
-    if (index == -1) return;
-
-    _categories[index] = category;
-
-    notifyListeners();
+    final index = _categories.indexWhere((c) => c.id == category.id);
+    if (index != -1) {
+      _categories[index] = category;
+      notifyListeners();
+    }
   }
 
   void deleteCategory(String id) {
-    final category = _categories.firstWhere(
-          (c) => c.id == id,
-    );
-
-    if (category.isDefault) return;
-
-    _categories.removeWhere(
-          (c) => c.id == id,
-    );
-
+    _categories.removeWhere((c) => c.id == id);
     notifyListeners();
   }
 }

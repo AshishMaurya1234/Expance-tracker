@@ -200,7 +200,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
               _card(
                 child: DropdownButtonFormField<String>(
-                  value: selectedLedger,
+                  initialValue: selectedLedger,
                   decoration: _inputDecoration(
                     labelText: 'Ledger / Account',
                   ),
@@ -224,7 +224,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
               _card(
                 child: DropdownButtonFormField<String>(
-                  value: selectedPaymentMode,
+                  initialValue: selectedPaymentMode,
                   decoration: _inputDecoration(
                     labelText: 'Payment Mode',
                   ),
